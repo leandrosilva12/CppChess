@@ -4,14 +4,10 @@
 
 using namespace sf;
 
-
-
-
-
 int main(){
 
     // Creates Window
-    int windowWidth = 800;
+    int windowWidth = 600;
     int windowHeight = 600;
     RenderWindow window(VideoMode(windowWidth, windowHeight), "PyChess");
 
@@ -46,11 +42,13 @@ int main(){
         //Loading texture
         sf::Texture texture;
         if (!texture.loadFromFile("Images/board-brown.png")){
-            std :: cout << "gay \n" ;
+            std :: cout << "o chico é gay " << std :: endl;
         }
         sf::Sprite sprite;
         sprite.setTexture(texture);
-        //sprite.setScale(800/160,600/160);
+        sprite.setScale(
+            (float)windowWidth/sprite.getLocalBounds().width,
+            (float)windowHeight/sprite.getLocalBounds().height);
         window.draw(sprite);
         window.display();
         
