@@ -3,19 +3,58 @@
 #include <iostream>
 
 using namespace sf;
+using namespace std;  
+
+//Global variables
+int windowWidth = 600;
+int windowHeight = 600;
+String pieces_names[6] = {"pawn", "knight", "bishop", "rook", "queen", "king"};
+RenderWindow window(VideoMode(windowWidth, windowHeight), "CppChess");
+
+// Função updateBoard 
+void updateBoard(int board[8][8]) {  
+    Texture texture;
+    Sprite sprite;
+    for (int x=0; x < 8; x++)
+        for (int y=0; y < 8; y++){
+            int p = board[x][y];
+            if (p == 0) continue;
+            
+            if (!texture.loadFromFile("Images/" + pieces_names[abs(p)%7 - 1] + (p > 0 ? 'W' : 'B') + ".png")){
+                cout << "0x1c0e6ae ERROR: Please reboot your pc and unnistall your operating system!" << endl;
+            }
+            sprite.setTexture(texture);
+            sprite.setScale(    
+                (float)windowWidth/sprite.getLocalBounds().width/8,
+                (float)windowHeight/sprite.getLocalBounds().height/8);
+            sprite.setPosition((float)windowWidth/sprite.getLocalBounds().width/8*x, (float)windowHeight/sprite.getLocalBounds().height/8*y);
+            window.draw(sprite);
+            window.display();
+        }
+}
 
 int main(){
+    
+    int board[8][8] = {
+        {-10,-2,-3,-12,-5,-3,-2,-10},
+        {-1,-1,-1,-1,-1,-1,-1,-1},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 0, 0, 0, 0, 0, 0, 0, 0},
+        { 1, 1, 1, 1, 1, 1, 1, 1}, 
+        { 10, 2, 4, 12, 5, 4, 2, 10}
+    };
 
     // Creates Window
-    int windowWidth = 600;
-    int windowHeight = 600;
-    RenderWindow window(VideoMode(windowWidth, windowHeight), "PyChess");
-
+    
+    
 
     // Creates Object of type Event
     Event event;
     bool running = true;
-    while (window.isOpen()){
+    while (window.isOpen())
+    {
         // gets the current event
         window.pollEvent(event);
         // check the type of the event...
@@ -30,33 +69,36 @@ int main(){
                 break;
             case Event::LostFocus:
                 // myGame.pause();
-                // std:: cout << "Lost Focus";
+                //  cout << "Lost Focus";
             // we don't process other types of events
             default:
                 break;
         }
 
+        window.clear(Color::White);
 
-        window.clear(sf::Color::White);
-
-        //Loading texture
-        sf::Texture texture;
+        // Loading texture
+        Texture texture;
         if (!texture.loadFromFile("Images/board-brown.png")){
-            std :: cout << "o chico é gay " << std :: endl;
+            cout << "0x1c0e6ae ERROR: Please reboot your pc and unnistall your operating system!" << endl;
         }
-        sf::Sprite sprite;
+
+        Sprite sprite;
         sprite.setTexture(texture);
-        sprite.setScale(
+        sprite.setScale(    
             (float)windowWidth/sprite.getLocalBounds().width,
             (float)windowHeight/sprite.getLocalBounds().height);
         window.draw(sprite);
         window.display();
-        
+
+        updateBoard(board);
+
+        window.setFramerateLimit(60);
     }
-
-
-
-
 
     return 0;
 }
+
+
+
+
