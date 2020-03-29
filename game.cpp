@@ -38,7 +38,6 @@ int main(){
 
 
         window.clear(sf::Color::White);
-
         //Loading texture
         sf::Texture texture;
         if (!texture.loadFromFile("Images/board-brown.png")){
