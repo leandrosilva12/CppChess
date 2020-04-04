@@ -2,15 +2,35 @@
 #include <time.h>
 #include <iostream>
 
+
 using namespace sf;
 using namespace std;  
 
-//Global variables
+// global variables
 int windowWidth = 600;
 int windowHeight = 600;
+Sprite boardSprite;
 String pieces_names[6] = {"pawn", "knight", "bishop", "rook", "queen", "king"};
 RenderWindow window(VideoMode(windowWidth, windowHeight), "CppChess");
+vector<Sprite> spritePieces;
 bool turn = true;
+
+// Textures 
+
+Texture pawnB; 
+Texture pawnW;
+Texture knightB;
+Texture knightW;
+Texture rookB;
+Texture rookW;
+Texture bishopB;
+Texture bishopW;
+Texture queenB;
+Texture queenW;
+Texture kingB;
+Texture kingW;
+
+
 int board[8][8] = {
     {-11, -1,  0,  0,  0,  0,  1, 11},
     { -2, -1,  0,  0,  0,  0,  1,  2},
@@ -22,6 +42,81 @@ int board[8][8] = {
     {-11, -1,  0,  0,  0,  0,  1, 11}
 };
 
+// prototype functions
+vector<bool> makeMove(int x, int y, int n, int m);
+vector<pair<int, int>> getMovesLegal(int x, int y);
+map<pair<int, int>,vector<pair<int, int>>> getAllMovesLegal();
+bool underAttack(vector<pair<int, int>> pos_pieces);
+bool isCheck();
+int isCheckmate();
+vector<pair<int, int>> getMovesAtk(int x, int y);
+vector<pair<int, int>> getMovesNeutral(int x, int y);
+vector<pair<int, int>> getMoves(int x, int y);
+
+void getSprites(){
+    
+    for (int x=0; x < 8; x++)
+        for (int y=0; y < 8; y++){
+            Sprite sprite;
+            int p = board[y][x];
+            if (p == 0) continue;
+
+            switch (abs(p) % 7 * (p > 0 ? 1 : -1)){
+                case -1:
+                    sprite.setTexture(pawnB);
+                    break;
+                case -2:
+                    sprite.setTexture(knightB);
+                    break;
+                case -3:
+                    sprite.setTexture(bishopB);
+                    break;
+                case -4:
+                    sprite.setTexture(rookB);
+                    break;
+                case -5:
+                    sprite.setTexture(queenB);
+                    break;
+                case -6:
+                    sprite.setTexture(kingB);
+                    break;      
+                case 1:
+                    sprite.setTexture(pawnW);
+                    break;
+                case 2:
+                    sprite.setTexture(knightW);
+                    break;
+                case 3:
+                    sprite.setTexture(bishopW);
+                    break;
+                case 4:
+                    sprite.setTexture(rookW);
+                    break;
+                case 5:
+                    sprite.setTexture(queenW);
+                    break;
+                case 6:
+                    sprite.setTexture(kingW);
+                    break;    
+                
+                default:
+                    break;
+            }
+            sprite.setScale(    
+                (float)windowWidth/sprite.getLocalBounds().width/8,
+                (float)windowHeight/sprite.getLocalBounds().height/8);
+
+            sprite.setPosition(
+                (float)sprite.getGlobalBounds().width*y, 
+                (float)sprite.getGlobalBounds().height*x);
+            
+            
+            spritePieces.push_back(sprite);
+        }   
+}
+
+
+
 // pawn = 1 / 8
 // knight = 2 
 // bishop = 3
@@ -29,8 +124,11 @@ int board[8][8] = {
 // queen = 5
 // king = 6 / 13
 
+
 vector<bool> makeMove(int x, int y, int n, int m) {
-    // Fix pieces' position and attributes after a move.
+    /**
+     *  Fix pieces' position and attributes after a move. 
+     */
     bool captured, promoted;
     int other;
     if (board[n][m] != 0)
@@ -90,110 +188,158 @@ vector<bool> makeMove(int x, int y, int n, int m) {
     return {captured, promoted};
 }
 
-vector<Vector2i> getMovesLegal(int x, int y) {
-    // Return a list with allowed moves for one piece.
-    
-    vector<Vector2i> movesLegal;
-    vector<Vector2i> moves = getMoves(x,y);
+vector<pair<int, int>> getMovesLegal(int x, int y) {
+    /** 
+     * Return a list with allowed moves for one piece. 
+     */
+    int temp_board[8][8];
+    vector<pair<int, int>> moves_legal;
+    vector<pair<int, int>> moves = getMoves(x,y); 
+
+    // Check if ``moves`` are already legal
     int piece = board[x][y];
     board[x][y] = 0;
-    if (abs(piece) % 7) == 6 && isCheck()){
-        movesLegal = moves;
-    }else{
+    if ((abs(piece) % 7) == 6 && !isCheck()) {
+        moves_legal = moves;
+    } 
+     /*
+    // Filter the moves that are legal
+    else {
         board[x][y] = piece;
-        for(Vector2i v : moves){
-            ...
+        
+        // Verify moves that stop the check
+        for(pair<int, int> m : moves){
+            // Copy board to temp_board
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j <8; j++)
+                    copy_board[i][j] = board[i][j];
+
+            makeMove(x, y, m.x, m.y);
+
+            if (!isCheck())
+                moves_legal.insert(moves_legal.end(), m);
+
+            // Copy temp_board to board
+            for (int i = 0; i < 8; i++)
+                for (int j = 0; j <8; j++)
+                    copy_board[i][j] = board[i][j];
         }
     }
-    ...
+    */
+    board[x][y] = piece;
+    
+    return moves_legal; 
 }
 
-vector<Vector2i> getAllMovesLegal() {
-    // Return a dictionary with allowed moves for each piece.
-    map<Vector2i, vector<Vector2i>> all_moves_legal;
+
+map<pair<int, int>, vector<pair<int, int>>> getAllMovesLegal() {
+    /** 
+     * Return a dictionary with allowed moves for each piece. 
+     */
+    int other;
+    map<pair<int, int>, vector<pair<int, int>>> all_moves_legal;
     
     for (int x = 0; x < 8; x++)
-        for (int y = 0; y < 8; y++)
+        for (int y = 0; y < 8; y++) {
             other = board[x][y];
-			if ((other > 0 ? 1 : 0) == turn)
-                all_moves_legal.insert(<Vector2i, vector<Vector2i>>({x, y}, getMovesLegal(x, y)));
-    
+            pair<int, int> temp{x,y};
+			if ((other > 0 ? 1 : 0) == turn) {
+                all_moves_legal[temp] = vector<pair<int, int>>();
+            }
+        
+        }
 	return all_moves_legal;
 }
 
 
+
+bool underAttack(vector<pair<int, int>> pos_pieces) {
+    /** 
+     * Check if any of the positions is being attacked.
+     *
+     * @param pos_pieces The set of positions.
+     */
+    int other;
+    for(int x = 0; x < 8; x++){
+        for(int y = 0; y < 8; y++){
+            other = board[x][y];
+            if ((other > 0 ? 1 : 0) != turn){
+                for (pair<int, int> pos : pos_pieces)
+                    for (pair<int, int> pos_atk : getMovesAtk(x, y))
+                        if (pos == pos_atk)
+                            return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool isCheck() {
+    /**
+     * Check if king is being attacked.
+     */
+    int other;
+
+    // Find king currently playing
+    for (int x = 0; x < 8; x++)
+        for (int y = 0; y < 8; y++) {
+            other = board[x][y];
+            if ((abs(other) % 7) == 6 && (other > 0 ? 1 : 0) == turn)
+                if (underAttack({{x, y}}))
+                    return true;
+        }
+    return false;
+}
 /*
-def get_moves_legal(self, x, y):
-		""" Return a list with allowed moves for one piece. """
-		# Remove piece from ``board`` and verify if king is being attacked
-		moves_legal = set()
-		moves = self.get_moves(x, y)
+int isCheckmate() {
+    /**
+     * Return state of the game (0: no checkmate, 1: checkmate, 2: stalemate).
+     *//*
+    int checkmate;
+    if (isCheck()) {
+        checkmate = 1;
+        for (const auto m : getAllMovesLegal()) {
+            if (m.second.size() != 0) {
+                checkmate = 0;
+                break;
+            }
+        
+        }
+    } else {
+        checkmate = 0;
+        for (const auto m : getAllMovesLegal()) {
+            if (m.second.size() != 0) {
+                checkmate = 2;
+                break;
+            }
+        }
+    }
 
-		piece = self.board[x][y]
-		self.board[x][y] = None
-
-		assert piece is not None
-		
-		if piece[NAME] != 'K' and not self.check():
-			moves_legal = moves
-		else:
-			self.board[x][y] = piece
-
-			# Verify moves that stop the check
-			for n, m in moves:
-				if piece[NAME] == 'K':
-					if piece[COLOR] == '0':
-						pos_kings = [(n, m), self.pos_kings[1]]				
-					else:
-						pos_kings = [self.pos_kings[0], (n, m)]
-				else:
-					pos_kings = list(self.pos_kings)
-
-				game = Game(self.turn, [list(row) for row in self.board], pos_kings)				
-				game.make_move(x, y, n, m)
-
-				if not game.check():
-					moves_legal.add((n, m))
-
-		self.board[x][y] = piece
-		
-		return moves_legal
-
-	def get_all_moves_legal(self):
-		""" Return a dictionary with allowed moves for each piece.
-
-		:rtype: dict[(int, int), (int, int)]
-		"""
-		all_moves_legal = {}
-
-		for x in range(8):
-			for y in range(8):
-				other = self.board[x][y]
-				if other is not None and other[COLOR] == str(self.turn):
-					all_moves_legal[(x, y)] = self.get_moves_legal(x, y)
-
-		return all_moves_legal
-
+    return checkmate;
+}
 */
 
-vector<Vector2i> getMovesAtk(int x, int y) {
+vector<pair<int, int>> getMovesAtk(int x, int y) {
+    /** 
+     * Return moves that are hostile. 
+     */
     int a, b, k, other;
     int piece = board[x][y];
-    vector<Vector2i> movesAtk;
+    vector<pair<int, int>> moves_atk;
 
     switch (abs(piece)%7) {
         case 1:
             // diagonal capture
             b = piece > 0 ? -1 : 1;
             for (a = -1; a <= 1; a += 2)
-                if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) { // nao sai dos limites
+                if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) {   // inner board
                     other = board[x + b][y + b];
-                    if (other == 0) { // está vazio
+                    if (other == 0) {
                         other = board[x + a][y];
-                        if (other == 8) // peao en_passant
-                            movesAtk.insert(movesAtk.end(), {x + a, y + b});
+                        if (other == 8)     // pawn en_passant
+                            moves_atk.insert(moves_atk.end(), {x + a, y + b});
                     } else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) // são de teams diferentes
-                        movesAtk.insert(movesAtk.end(), {x + a, y + b});
+                        moves_atk.insert(moves_atk.end(), {x + a, y + b});
                 }            
             break;
         case 2:
@@ -204,7 +350,7 @@ vector<Vector2i> getMovesAtk(int x, int y) {
                     if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) { // nao sai dos limites
                         other = board[x + a][y + b];
                         if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1) || other == 0) { // são de teams diferentes
-                            movesAtk.insert(movesAtk.end(), {x + a, y + b});
+                            moves_atk.insert(moves_atk.end(), {x + a, y + b});
                         }
                     }
                 }
@@ -216,9 +362,9 @@ vector<Vector2i> getMovesAtk(int x, int y) {
                     for (k = 1; 0 <= x + a*k &&  x + a*k < 8 && 0 <= y + b*k && y + b*k < 8; k++) {
                         other = board[x + a*k][y + b*k];
                         if (other == 0)     // se vazio, adiciona
-                            movesAtk.insert(movesAtk.end(), {x + a*k, y + b*k});
+                            moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                         else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) { // se inimigo, adiciona e sai
-                            movesAtk.insert(movesAtk.end(), {x + a*k, y + b*k});
+                            moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                             break;
                         } else // sai
                             break;
@@ -232,9 +378,9 @@ vector<Vector2i> getMovesAtk(int x, int y) {
                     for (k = 1; 0 <= x + a*k &&  x + a*k < 8 && 0 <= y + b*k && y + b*k < 8; k++) {
                         other = board[x + a*k][y + b*k];
                         if (other == 0)     // se vazio, adiciona
-                            movesAtk.insert(movesAtk.end(), {x + a*k, y + b*k});
+                            moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                         else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) { // se inimigo, adiciona e sai
-                            movesAtk.insert(movesAtk.end(), {x + a*k, y + b*k});
+                            moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                             break;
                         } else // sai
                             break;
@@ -249,9 +395,9 @@ vector<Vector2i> getMovesAtk(int x, int y) {
                     for (k = 1; 0 <= x + a*k &&  x + a*k < 8 && 0 <= y + b*k && y + b*k < 8; k++) {
                         other = board[x + a*k][y + b*k];
                         if (other == 0)     // se vazio, adiciona
-                            movesAtk.insert(movesAtk.end(), {x + a*k, y + b*k});
+                            moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                         else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) { // se inimigo, adiciona e sai
-                            movesAtk.insert(movesAtk.end(), {x + a*k, y + b*k});
+                            moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                             break;
                         } else // sai
                             break;
@@ -266,9 +412,9 @@ vector<Vector2i> getMovesAtk(int x, int y) {
                     if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) { // nao sai dos limites
                         other = board[x + a][y + b];
                         if (other == 0)     // se vazio, adiciona
-                            movesAtk.insert(movesAtk.end(), {x + a, y + b});
+                            moves_atk.insert(moves_atk.end(), {x + a, y + b});
                         else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) { // se inimigo, adiciona e sai
-                            movesAtk.insert(movesAtk.end(), {x + a, y + b});
+                            moves_atk.insert(moves_atk.end(), {x + a, y + b});
                             break;
                         } else // sai
                             break;
@@ -277,31 +423,11 @@ vector<Vector2i> getMovesAtk(int x, int y) {
             break;
     }
 
-    return movesAtk;
+    return moves_atk;
 }
 
-bool underAttack(vector<Vector2i> pos_pieces){
-    /* \brief Check if any of the positions is being attacked.
-     *
-     * \param pos_pieces: The set of postitions
-     */
-    int other;
-    for(int x = 0; x < 8; x++){
-        for(int y = 0; y < 8; y++){
-            other = board[x][y];
-            if ((other > 0 ? 1 : 0) != turn){
-                for (Vector2i pos : pos_pieces)
-                    for (Vector2i pos_atk : getMovesAtk(x, y))
-                        if (pos == pos_atk)
-                            return true;
-            }
-        }
-    }
-    return false;
-}
-    
-vector<Vector2i> getMovesNeutral(int x, int y) {
-    vector<Vector2i> movesNeutral;
+vector<pair<int, int>> getMovesNeutral(int x, int y) {
+    vector<pair<int, int>> moves_neutral;
     int a, b, other;
     int piece = board[x][y];
     switch (abs(piece)%7) {
@@ -312,7 +438,7 @@ vector<Vector2i> getMovesNeutral(int x, int y) {
                 if (0 <= y + b && y + b < 8){
                     other = board[x][y + b];
                     if (other == 0) {
-                        movesNeutral.insert(movesNeutral.end(), {x, y + b});
+                        moves_neutral.insert(moves_neutral.end(), {x, y + b});
                         if(y != 1 + 5*(piece > 0 ? 1 : 0)) break; // só anda 1 pá frente
                     } else break;
                 } 
@@ -334,9 +460,9 @@ vector<Vector2i> getMovesNeutral(int x, int y) {
                     }
                 if (can_move){
                     // enemy attack range doesn't reach squares between this rook and king
-                    vector<Vector2i> moves =  {{2, y}, {3, y}, {4, y}};
+                    vector<pair<int, int>> moves =  {{2, y}, {3, y}, {4, y}};
                     if (!underAttack(moves))
-                        movesNeutral.insert(movesNeutral.end(),{2, y});
+                        moves_neutral.insert(moves_neutral.end(),{2, y});
                 }        
             }
             other = board[7][y]; // canto esquerdo
@@ -350,34 +476,34 @@ vector<Vector2i> getMovesNeutral(int x, int y) {
                     }
                 if (can_move){
                     // enemy attack range doesn't reach squares between this rook and king
-                    vector<Vector2i> moves =  {{4, y}, {5, y}, {6, y}};
+                    vector<pair<int, int>> moves =  {{4, y}, {5, y}, {6, y}};
                     if (!underAttack(moves))
-                        movesNeutral.insert(movesNeutral.end(),{6, y});
+                        moves_neutral.insert(moves_neutral.end(),{6, y});
                 }        
             }
             break;
     }
-    return movesNeutral;
+    return moves_neutral;
 }
 
-vector<Vector2i> getMoves(int x, int y) {
+vector<pair<int, int>> getMoves(int x, int y) {
     /* Return attack and neutral (if existing) moves considering the chess' movement rules [1]_. 
 	 *	
      * [1] this moves may not be allowed.
 	 */
-    vector<Vector2i> moves;
-    vector<Vector2i> atk;
-    vector<Vector2i> neutral;
+    vector<pair<int, int>> moves;
+    vector<pair<int, int>> atk;
+    vector<pair<int, int>> neutral;
     int piece = board[x][y];
     switch (abs(piece)%7) {
         case 1:
         case 6:     
-            atk = getMovesAtk(x, y);
-            neutral = getMovesNeutral(x, y);
-            atk.insert( atk.end(), neutral.begin(), neutral.end() );
+            //atk = getMovesAtk(x, y);
+            //neutral = getMovesNeutral(x, y);
+            //atk.insert( atk.end(), neutral.begin(), neutral.end() );
             break;
         default:
-            atk = getMovesAtk(x, y);
+            //atk = getMovesAtk(x, y);
             break;
     }
     moves = atk;
@@ -386,31 +512,22 @@ vector<Vector2i> getMoves(int x, int y) {
 
 
 // Função updateBoard 
-void updateBoard(int board[8][8]) {  
-    Texture texture;
-    Sprite sprite;
-    for (int x=0; x < 8; x++)
-        for (int y=0; y < 8; y++){
-            int p = board[y][x];
-            if (p == 0) continue;
-            
-            if (!texture.loadFromFile("Images/" + pieces_names[abs(p)%7 - 1] + (p > 0 ? 'W' : 'B') + ".png")){
-                cout << "0x1c0e6ae ERROR: Please reboot your pc and unnistall your operating system!" << endl;
-            }
-            sprite.setTexture(texture);
-
-            sprite.setScale(    
-                (float)windowWidth/sprite.getLocalBounds().width/8,
-                (float)windowHeight/sprite.getLocalBounds().height/8);
-
-            sprite.setPosition(
-                (float)sprite.getGlobalBounds().width*y, 
-                (float)sprite.getGlobalBounds().height*x);
-            window.draw(sprite);
-        }
+void displayBoard(){     
+    window.draw(boardSprite);
+    for(int i=0;i<spritePieces.size();i++){
+        window.draw(spritePieces[i]);
+    }
+    window.draw(spritePieces[0]);
+    window.display();
+    
 }
 
+
+
 int main() {
+    if(!pawnB.loadFromFile("Images/pawnB.png") || !pawnW.loadFromFile("Images/pawnW.png") || !knightB.loadFromFile("Images/knightB.png") || !knightW.loadFromFile("Images/knightW.png") || !rookB.loadFromFile("Images/rookB.png") || !rookW.loadFromFile("Images/rookW.png") || !bishopB.loadFromFile("Images/bishopB.png") || !bishopW.loadFromFile("Images/bishopW.png") || !queenB.loadFromFile("Images/queenB.png") || !queenW.loadFromFile("Images/queenW.png") || !kingB.loadFromFile("Images/kingB.png") || !kingW.loadFromFile("Images/kingW.png")) { 
+        cout << "0x1c0e6ae ERROR: Please reboot your pc and unnistall your operating system!" << endl;
+    }
     // Creates Window
     // Creates Object of type Event
     Event event;
@@ -419,25 +536,24 @@ int main() {
     if (!texture.loadFromFile("Images/board-brown.png")){
         cout << "0x1c0e6ae ERROR: Please reboot your pc and unnistall your operating system!" << endl;
     }
-    Sprite sprite;
-    sprite.setTexture(texture);
-    sprite.setScale(
-            (float)windowWidth/sprite.getLocalBounds().width,
-            (float)windowHeight/sprite.getLocalBounds().height);
 
+    boardSprite.setTexture(texture);
+    boardSprite.setScale(
+            (float)windowWidth/boardSprite.getLocalBounds().width,
+            (float)windowHeight/boardSprite.getLocalBounds().height);
 
-    //// ZONA DE TESTOSTERONA ////////////////
-    vector<Vector2i> testosterona = getMoves(7, 6);  // peao branco
-    cout << "Zona de Testosterona "<< endl;
-    for(int i =0 ; i<testosterona.size();i++){
-        cout << testosterona.at(i).x << "  " << testosterona.at(i).y << endl;
-    }
-    cout << endl;
-    
-    // FIM DE ZONA ESCROTO /////////
+    getSprites();
     Vector2f oldPos;
-    while (window.isOpen())
-    {
+    pair<int, int> mouseRectOffset;
+    int index;
+    int mouseX;
+    int mouseY;
+    bool mouseClicked = false;
+    bool dragging = false;
+    displayBoard();
+    window.display();
+
+    while (window.isOpen()){
         // gets the current event
         window.pollEvent(event);
         // check the type of the event...
@@ -448,30 +564,44 @@ int main() {
                 running = false;
                 break;
             // key pressed
-            case Event::KeyPressed:
-                window.draw(sprite);
-                updateBoard(board);
-                window.display();
-                break;
             case Event::MouseButtonPressed:
                 if(event.mouseButton.button==Mouse::Left){
-                    oldPos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
-                    window.draw(sprite);
-                    updateBoard(board);
-                    window.display();
+                    mouseClicked = true;
+                    for(int i=0;i<spritePieces.size();i++){
+                        if(spritePieces[i].getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)){
+                            dragging=true;
+                            index = i;
+                            mouseRectOffset.first = event.mouseButton.x - spritePieces[i].getGlobalBounds().left - spritePieces[i].getOrigin().x;
+                            mouseRectOffset.second = event.mouseButton.y - spritePieces[i].getGlobalBounds().top - spritePieces[i].getOrigin().y ;
+                        }
+                    }                    
                 }
                 break;
             case Event::MouseButtonReleased:
-
                 if(event.mouseButton.button==Mouse::Left){
-                    break;
+                    mouseClicked = false;
+                    dragging = false ;
                 }
+                    break;
+            case Event::MouseMoved:
+                mouseX = event.mouseMove.x;
+                mouseY = event.mouseMove.y;
+                break;
+
             // we don't process other types of events
             default:
                 break;
         }
+        if (dragging == true)
+        {
+            spritePieces[index].setPosition(mouseX - mouseRectOffset.first, mouseY - mouseRectOffset.second);
+            window.draw(spritePieces[index]);
+            window.display();
+        }
+        displayBoard();
+        window.display();
         // Loading texture
-        window.setFramerateLimit(60);
+        window.setFramerateLimit(600);
     }
     return 0;
 }
