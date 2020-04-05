@@ -54,6 +54,7 @@ vector<pair<int, int>> getMovesNeutral(int x, int y);
 vector<pair<int, int>> getMoves(int x, int y);
 
 void getSprites(){
+    spritePieces.clear();
     
     for (int x=0; x < 8; x++)
         for (int y=0; y < 8; y++){
@@ -145,48 +146,45 @@ vector<bool> makeMove(int x, int y, int n, int m) {
         case 1:
             // Set pawn's ``en_passant`` attribute to true
             if (m == 3 + turn)
-                board[n][m] = 8;
+                board[n][m] = 8 * (piece > 0 ? 1 : -1);
             // Remove enemy pawns that were captured en passent
             // Acknowledge capture
-            other = board[n][piece > 0 ? m : -m];
-            if (other == 8){
-                if( turn){
-                    board[n][m] = 0;
-                } else {
-                    board[n][-m]= 0;
-                }
+            other = board[n][piece > 0 ? m+1 : m-1];
+            if (abs(other) == 8){
+                board[n][piece > 0 ? m+1 : m-1] = 0;
                 captured = true;
             }
-            // Acknowledge promotion
+
+           
             if (m == 7*(!turn)){
 				promoted = true;
             }
             break;
         case 4:
-            board[n][m] = 4;
+            board[n][m] = 4*(piece > 0 ? 1 : -1);
             break;
         case 6:
-            if (piece == 13){
+            if (abs(piece) == 13){
                 //swap rook with the king
                 if (n == 2){
-                    int rook = board[0][7*turn];
+                    //int rook = board[0][7*turn];
                     board[0][7*turn] = 0;
-                    board[3][7*turn] = rook;
+                    board[3][7*turn] = 4*(piece > 0 ? 1 : -1);
 
                 } else if(n == 6){
-                    int rook = board[7][7*turn];
+                    //int rook = board[7][7*turn];
                     board[7][7*turn] = 0;
-                    board[5][7*turn] = rook;
+                    board[5][7*turn] = 4* (piece > 0 ? 1 : -1);
                 }
             }
-            board[n][m] = 6;
+            board[n][m] = 6* (piece > 0 ? 1 : -1); // king has moved
             break;
     }
     // Rechange enemy pawn's attribute ``en_passant`` to false
     for (int i = 0; i < 8; i++){
         other = board[x][3+(!turn)];
-        if ((other > 0 ? 1 : -1) != (piece > 0 ? 1 : -1))
-            board[x][3 + !turn] = piece > 0 ? 1 : -1;
+        if (abs(other)%7 == 1 && (other > 0 ? 1 : -1) != (piece > 0 ? 1 : -1)) 
+            board[x][3 + !turn] = piece > 0 ? -1 : 1;
     }
     return {captured, promoted};
 }
@@ -224,8 +222,8 @@ vector<pair<int, int>> getMovesLegal(int x, int y) {
 
             // Copy temp_board to board
             for (int i = 0; i < 8; i++)
-                for (int j = 0; j <8; j++)
-                    temp_board[i][j] = board[i][j];
+                for (int j = 0; j < 8; j++)
+                    board[i][j] = temp_board[i][j];
         }
     }
     
@@ -337,7 +335,7 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
             b = piece > 0 ? -1 : 1;
             for (a = -1; a <= 1; a += 2)
                 if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) {       // inner board
-                    other = board[x + b][y + b];
+                    other = board[x + a][y + b];
                     if (other == 0) {
                         other = board[x + a][y];
                         if (other == 8)                                         // pawn en_passant
@@ -361,8 +359,8 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
             break;
         case 3:
             // diagonal movement
-            for (a = -1; a <= 1; a++)
-                for (b = -1; b <= 1; b++)
+            for (a = -1; a <= 1; a+=2)
+                for (b = -1; b <= 1; b+=2) {
                     for (k = 1; 0 <= x + a*k &&  x + a*k < 8 && 0 <= y + b*k && y + b*k < 8; k++) {
                         other = board[x + a*k][y + b*k];
                         if (other == 0)                                             // if empty, add
@@ -373,9 +371,10 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
                         } else 
                             break;
                     }
+                }
             break;
         case 4:
-            // cross movement
+            // cross movements
             for (a = -1; a <= 1; a++)
                 for (b = -1; b <= 1; b++) {
                     if (abs(a) == abs(b)) continue;
@@ -403,13 +402,13 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
                         else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) {
                             moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                             break;
-                        } else // sai
+                        } else
                             break;
                     }
                 }
             break;
         case 6:
-            // cross-diagonal movement
+            // one-cross-diagonal movement
             for (a = -1; a <= 1; a++)
                 for (b = -1; b <= 1; b++) {
                     if (a == 0 && b == 0) continue;
@@ -420,7 +419,7 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
                         else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) {
                             moves_atk.insert(moves_atk.end(), {x + a, y + b});
                             break;
-                        } else // sai
+                        } else
                             break;
                     }
                 }
@@ -523,6 +522,17 @@ void displayBoard(){
     
 }
 
+void printBoard(){
+
+    for(int i=0;i<8;i++){
+        for(int j=0;j<8;j++){
+            printf("%3d ", board[i][j]);
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+
 
 
 int main() {
@@ -616,7 +626,8 @@ int main() {
                         turn = !turn;
                         turnMoves=getAllMovesLegal();
                         spritePieces[index].setPosition((int)((float)mouseX/(float)windowWidth*8)*75,(int)((float)mouseY/(float)windowHeight*8)*75);
-
+                        printBoard();
+                        getSprites();
                     } else {
                         spritePieces[index].setPosition(oldX*windowWidth/8, oldY*windowHeight/8);
                     }
@@ -636,7 +647,9 @@ int main() {
             spritePieces[index].setPosition(mouseX - mouseRectOffset.first, mouseY - mouseRectOffset.second);
             window.draw(spritePieces[index]);
             window.display();
+           
         }
+        
         displayBoard();
         window.display();
         // Loading texture
