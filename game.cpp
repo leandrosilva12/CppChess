@@ -129,14 +129,18 @@ vector<bool> makeMove(int x, int y, int n, int m) {
     /**
      *  Fix pieces' position and attributes after a move. 
      */
-    bool captured, promoted;
+    bool captured=false, promoted=false;
     int other;
     if (board[n][m] != 0)
         captured = true;
+
     // Make move
+    cout << "motherfucker: "<< x << ',' << y << endl;
     int piece = board[x][y];
     board[x][y] = 0;
     board[n][m] = piece;
+
+    
     switch (abs(piece)%7) {
         case 1:
             // Set pawn's ``en_passant`` attribute to true
@@ -146,7 +150,6 @@ vector<bool> makeMove(int x, int y, int n, int m) {
             // Acknowledge capture
             other = board[n][piece > 0 ? m : -m];
             if (other == 8){
-                // Pode estar mal
                 if( turn){
                     board[n][m] = 0;
                 } else {
@@ -199,10 +202,10 @@ vector<pair<int, int>> getMovesLegal(int x, int y) {
     // Check if ``moves`` are already legal
     int piece = board[x][y];
     board[x][y] = 0;
-    if ((abs(piece) % 7) == 6 && !isCheck()) {
+    if ((abs(piece) % 7) != 6 && !isCheck()) {
         moves_legal = moves;
     } 
-     /*
+     
     // Filter the moves that are legal
     else {
         board[x][y] = piece;
@@ -212,9 +215,9 @@ vector<pair<int, int>> getMovesLegal(int x, int y) {
             // Copy board to temp_board
             for (int i = 0; i < 8; i++)
                 for (int j = 0; j <8; j++)
-                    copy_board[i][j] = board[i][j];
+                    temp_board[i][j] = board[i][j];
 
-            makeMove(x, y, m.x, m.y);
+            makeMove(x, y, m.first, m.second);
 
             if (!isCheck())
                 moves_legal.insert(moves_legal.end(), m);
@@ -222,10 +225,10 @@ vector<pair<int, int>> getMovesLegal(int x, int y) {
             // Copy temp_board to board
             for (int i = 0; i < 8; i++)
                 for (int j = 0; j <8; j++)
-                    copy_board[i][j] = board[i][j];
+                    temp_board[i][j] = board[i][j];
         }
     }
-    */
+    
     board[x][y] = piece;
     
     return moves_legal; 
@@ -244,7 +247,8 @@ map<pair<int, int>, vector<pair<int, int>>> getAllMovesLegal() {
             other = board[x][y];
             pair<int, int> temp{x,y};
 			if ((other > 0 ? 1 : 0) == turn) {
-                all_moves_legal[temp] = vector<pair<int, int>>();
+                all_moves_legal[temp] = getMovesLegal(x, y);
+
             }
         
         }
@@ -290,11 +294,11 @@ bool isCheck() {
         }
     return false;
 }
-/*
+
 int isCheckmate() {
     /**
      * Return state of the game (0: no checkmate, 1: checkmate, 2: stalemate).
-     *//*
+     */
     int checkmate;
     if (isCheck()) {
         checkmate = 1;
@@ -317,7 +321,7 @@ int isCheckmate() {
 
     return checkmate;
 }
-*/
+
 
 vector<pair<int, int>> getMovesAtk(int x, int y) {
     /** 
@@ -332,13 +336,13 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
             // diagonal capture
             b = piece > 0 ? -1 : 1;
             for (a = -1; a <= 1; a += 2)
-                if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) {   // inner board
+                if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) {       // inner board
                     other = board[x + b][y + b];
                     if (other == 0) {
                         other = board[x + a][y];
-                        if (other == 8)     // pawn en_passant
+                        if (other == 8)                                         // pawn en_passant
                             moves_atk.insert(moves_atk.end(), {x + a, y + b});
-                    } else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) // são de teams diferentes
+                    } else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1))    // different teams
                         moves_atk.insert(moves_atk.end(), {x + a, y + b});
                 }            
             break;
@@ -347,9 +351,9 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
             for (a = -2; a <= 2; a++)
                 for (b = -2; b <= 2; b++) {
                     if (abs(a) == abs(b) || a == 0 || b == 0) continue;
-                    if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) { // nao sai dos limites
+                    if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) { 
                         other = board[x + a][y + b];
-                        if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1) || other == 0) { // são de teams diferentes
+                        if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1) || other == 0) {
                             moves_atk.insert(moves_atk.end(), {x + a, y + b});
                         }
                     }
@@ -361,12 +365,12 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
                 for (b = -1; b <= 1; b++)
                     for (k = 1; 0 <= x + a*k &&  x + a*k < 8 && 0 <= y + b*k && y + b*k < 8; k++) {
                         other = board[x + a*k][y + b*k];
-                        if (other == 0)     // se vazio, adiciona
+                        if (other == 0)                                             // if empty, add
                             moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
-                        else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) { // se inimigo, adiciona e sai
+                        else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) {    // if enemy, add and break
                             moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                             break;
-                        } else // sai
+                        } else 
                             break;
                     }
             break;
@@ -377,12 +381,12 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
                     if (abs(a) == abs(b)) continue;
                     for (k = 1; 0 <= x + a*k &&  x + a*k < 8 && 0 <= y + b*k && y + b*k < 8; k++) {
                         other = board[x + a*k][y + b*k];
-                        if (other == 0)     // se vazio, adiciona
+                        if (other == 0)
                             moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
-                        else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) { // se inimigo, adiciona e sai
+                        else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) {
                             moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                             break;
-                        } else // sai
+                        } else
                             break;
                     }
                 }
@@ -394,9 +398,9 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
                     if (a == 0 && b == 0) continue;
                     for (k = 1; 0 <= x + a*k &&  x + a*k < 8 && 0 <= y + b*k && y + b*k < 8; k++) {
                         other = board[x + a*k][y + b*k];
-                        if (other == 0)     // se vazio, adiciona
+                        if (other == 0)
                             moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
-                        else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) { // se inimigo, adiciona e sai
+                        else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) {
                             moves_atk.insert(moves_atk.end(), {x + a*k, y + b*k});
                             break;
                         } else // sai
@@ -409,11 +413,11 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
             for (a = -1; a <= 1; a++)
                 for (b = -1; b <= 1; b++) {
                     if (a == 0 && b == 0) continue;
-                    if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) { // nao sai dos limites
+                    if (0 <= x + a && x + a < 8 && 0 <= y + b && y + b < 8) {
                         other = board[x + a][y + b];
-                        if (other == 0)     // se vazio, adiciona
+                        if (other == 0)
                             moves_atk.insert(moves_atk.end(), {x + a, y + b});
-                        else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) { // se inimigo, adiciona e sai
+                        else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1)) {
                             moves_atk.insert(moves_atk.end(), {x + a, y + b});
                             break;
                         } else // sai
@@ -487,26 +491,23 @@ vector<pair<int, int>> getMovesNeutral(int x, int y) {
 }
 
 vector<pair<int, int>> getMoves(int x, int y) {
-    /* Return attack and neutral (if existing) moves considering the chess' movement rules [1]_. 
-	 *	
-     * [1] this moves may not be allowed.
+    /**
+     *  Return attack and neutral (if existing) moves considering the chess' movement rules (this moves may not be allowed). 
 	 */
     vector<pair<int, int>> moves;
-    vector<pair<int, int>> atk;
     vector<pair<int, int>> neutral;
     int piece = board[x][y];
     switch (abs(piece)%7) {
         case 1:
         case 6:     
-            //atk = getMovesAtk(x, y);
-            //neutral = getMovesNeutral(x, y);
-            //atk.insert( atk.end(), neutral.begin(), neutral.end() );
+            moves = getMovesAtk(x, y);
+            neutral = getMovesNeutral(x, y);
+            moves.insert( moves.end(), neutral.begin(), neutral.end() );
             break;
         default:
-            //atk = getMovesAtk(x, y);
+            moves = getMovesAtk(x, y);
             break;
     }
-    moves = atk;
     return moves;
 }
 
@@ -543,7 +544,22 @@ int main() {
             (float)windowHeight/boardSprite.getLocalBounds().height);
 
     getSprites();
-    Vector2f oldPos;
+
+
+    map<pair<int,int>,vector<pair<int,int>>> turnMoves = getAllMovesLegal();
+
+    
+    for (const auto m : turnMoves) {
+        cout << m.first.first << ',' << m.first.second << ": ";
+
+        for (pair<int, int> p : m.second) {
+            cout << '('<<p.first << ',' << p.second << ") ";
+        }
+        cout << endl;
+    }
+        
+    int oldX;
+    int oldY;
     pair<int, int> mouseRectOffset;
     int index;
     int mouseX;
@@ -571,6 +587,8 @@ int main() {
                         if(spritePieces[i].getGlobalBounds().contains(event.mouseButton.x, event.mouseButton.y)){
                             dragging=true;
                             index = i;
+                            oldX = (int)((float)event.mouseButton.x/windowWidth*8);
+                            oldY = (int)((float)event.mouseButton.y/windowHeight*8);
                             mouseRectOffset.first = event.mouseButton.x - spritePieces[i].getGlobalBounds().left - spritePieces[i].getOrigin().x;
                             mouseRectOffset.second = event.mouseButton.y - spritePieces[i].getGlobalBounds().top - spritePieces[i].getOrigin().y ;
                         }
@@ -578,17 +596,38 @@ int main() {
                 }
                 break;
             case Event::MouseButtonReleased:
-                if(event.mouseButton.button==Mouse::Left){
+                if(event.mouseButton.button==Mouse::Left){ 
+                    if(!mouseClicked){
+                        break;
+                    }
                     mouseClicked = false;
-                    dragging = false ;
+                    dragging = false;
+                    //vector<pair<int,int>> moves_legal = turnMoves[pair<int,int>(spritePieces[index].getPosition().x,spritePieces[index].getPosition().y)];
+                    //cout << spritePieces[index].getPosition().x << ',' << spritePieces[index].getPosition().y << endl;
+                    vector<pair<int,int>> moves_legal = turnMoves[pair<int,int>(oldX,oldY)];
+                    
+                    cout << moves_legal.size() << endl;
+
+                    pair<int,int> newPos = {(int)((float)mouseX/windowWidth*8),(int)((float)mouseY/windowHeight*8)};
+                    cout << newPos.first << ',' << newPos.second << endl;
+                    
+                    if (find(moves_legal.begin(), moves_legal.end(), newPos) != moves_legal.end()) {
+                        makeMove(oldX, oldY, newPos.first, newPos.second);
+                        turn = !turn;
+                        turnMoves=getAllMovesLegal();
+                        spritePieces[index].setPosition((int)((float)mouseX/(float)windowWidth*8)*75,(int)((float)mouseY/(float)windowHeight*8)*75);
+
+                    } else {
+                        spritePieces[index].setPosition(oldX*windowWidth/8, oldY*windowHeight/8);
+                    }
+
                 }
-                    break;
+                break;
             case Event::MouseMoved:
                 mouseX = event.mouseMove.x;
                 mouseY = event.mouseMove.y;
                 break;
 
-            // we don't process other types of events
             default:
                 break;
         }
@@ -601,7 +640,7 @@ int main() {
         displayBoard();
         window.display();
         // Loading texture
-        window.setFramerateLimit(600);
+        window.setFramerateLimit(1000);
     }
     return 0;
 }
