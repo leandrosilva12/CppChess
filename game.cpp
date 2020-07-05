@@ -52,6 +52,7 @@ int isCheckmate();
 vector<pair<int, int>> getMovesAtk(int x, int y);
 vector<pair<int, int>> getMovesNeutral(int x, int y);
 vector<pair<int, int>> getMoves(int x, int y);
+void promote(int x,int y);
 
 void getSprites(){
     spritePieces.clear();
@@ -118,13 +119,39 @@ void getSprites(){
 
 
 
-// pawn = 1 / 8
-// knight = 2 
+// pawn = 1 / 8         normal / enpassant
+// knight = 2          
 // bishop = 3
-// rook = 4 / 11
+// rook = 4 / 11        has moved / didnt move
 // queen = 5
-// king = 6 / 13
+// king = 6 / 13        has moved / didnt move
 
+void promote(int x,int y){
+    cout << endl << "Promote To:" << endl;
+    cout << "(Q) Queen:" << endl;
+    cout << "(R) Rook:" << endl;
+    cout << "(B) Bishop:" << endl;
+    cout << "(K) Knight:" << endl;
+    cout << ">>>";
+
+    string res;
+    char temp[1];
+    scanf("%s",temp);
+    res = temp; 
+    
+    for(char c : res) c = toupper(c);
+    if (res == "Q")
+        board[x][y] = 5;
+    else if (res == "R")
+        board[x][y] = 4;
+    else if (res == "B")
+        board[x][y] = 3;
+    else if (res == "K")
+        board[x][y] = 2;
+        
+    cout << "res= " << res << endl;
+    
+}
 
 vector<bool> makeMove(int x, int y, int n, int m) {
     /**
@@ -155,8 +182,8 @@ vector<bool> makeMove(int x, int y, int n, int m) {
                 captured = true;
             }
 
-           
             if (m == 7*(!turn)){
+                promote(n, m);
 				promoted = true;
             }
             break;
@@ -181,10 +208,10 @@ vector<bool> makeMove(int x, int y, int n, int m) {
             break;
     }
     // Rechange enemy pawn's attribute ``en_passant`` to false
-    for (int i = 0; i < 8; i++){
-        other = board[x][3+(!turn)];
+    for (int i=  0; i < 8; i++){
+        other = board[i][3+(!turn)];
         if (abs(other)%7 == 1 && (other > 0 ? 1 : -1) != (piece > 0 ? 1 : -1)) 
-            board[x][3 + !turn] = piece > 0 ? -1 : 1;
+            board[i][3 + !turn] = piece > 0 ? -1 : 1;
     }
     return {captured, promoted};
 }
@@ -246,9 +273,7 @@ map<pair<int, int>, vector<pair<int, int>>> getAllMovesLegal() {
             pair<int, int> temp{x,y};
 			if ((other > 0 ? 1 : 0) == turn) {
                 all_moves_legal[temp] = getMovesLegal(x, y);
-
             }
-        
         }
 	return all_moves_legal;
 }
@@ -298,6 +323,7 @@ int isCheckmate() {
      * Return state of the game (0: no checkmate, 1: checkmate, 2: stalemate).
      */
     int checkmate;
+    bool hasMoves = false;
     if (isCheck()) {
         checkmate = 1;
         for (const auto m : getAllMovesLegal()) {
@@ -310,11 +336,14 @@ int isCheckmate() {
     } else {
         checkmate = 0;
         for (const auto m : getAllMovesLegal()) {
+            
             if (m.second.size() != 0) {
-                checkmate = 2;
+                hasMoves = true;
                 break;
             }
         }
+        if (!hasMoves)
+            checkmate = 2;
     }
 
     return checkmate;
@@ -338,7 +367,7 @@ vector<pair<int, int>> getMovesAtk(int x, int y) {
                     other = board[x + a][y + b];
                     if (other == 0) {
                         other = board[x + a][y];
-                        if (other == 8)                                         // pawn en_passant
+                        if (abs(other) == 8)                                         // pawn en_passant
                             moves_atk.insert(moves_atk.end(), {x + a, y + b});
                     } else if ((other > 0 ? -1 : 1) != (piece > 0 ? -1 : 1))    // different teams
                         moves_atk.insert(moves_atk.end(), {x + a, y + b});
@@ -624,6 +653,14 @@ int main() {
                     if (find(moves_legal.begin(), moves_legal.end(), newPos) != moves_legal.end()) {
                         makeMove(oldX, oldY, newPos.first, newPos.second);
                         turn = !turn;
+                        if (int res=isCheckmate()){
+                            if (res==1){
+                                cout<< (!turn ? "White" : "Black")  <<  " Wins!" << endl; 
+                            }
+                            else if(res==2){
+                                cout << "Draw!" << res <<endl;
+                            }
+                        }
                         turnMoves=getAllMovesLegal();
                         spritePieces[index].setPosition((int)((float)mouseX/(float)windowWidth*8)*75,(int)((float)mouseY/(float)windowHeight*8)*75);
                         printBoard();
@@ -648,7 +685,10 @@ int main() {
             window.draw(spritePieces[index]);
             window.display();
            
+        
         }
+
+        
         
         displayBoard();
         window.display();
