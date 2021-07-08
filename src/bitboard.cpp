@@ -38,4 +38,24 @@ void Bitboards::print(Bitboard board) {
         }
         std::cout << std::endl;
     }    
+    std::cout << std::endl;
+
+}
+
+
+void pawn_attacks(int color) {
+
+    Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
+
+    Bitboard pawn_east_atk = color ? pawns >> 9 : pawns << 7;
+    Bitboard pawn_west_atk = color ? pawns >> 7 : pawns << 9;
+
+    // Prevents some impossible moves due to shifting
+    Bitboard a_col_mask = 0x7F7F7F7F7F7F7F7F;
+    Bitboard h_col_mask = 0xFEFEFEFEFEFEFEFE;
+
+    Bitboard pawn_attacks = ((pawn_east_atk & a_col_mask) | (pawn_west_atk & h_col_mask))
+                            & (color ? white_pieces : black_pieces);
+
+    Bitboards::print(pawn_attacks);
 }
