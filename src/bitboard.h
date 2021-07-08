@@ -8,4 +8,5 @@ namespace Bitboards {
     void print(Bitboard);
 }
 
-void pawn_attacks(int);
+Bitboard pawn_attacks(int);
+Bitboard pawn_pushes(int);

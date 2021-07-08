@@ -43,7 +43,7 @@ void Bitboards::print(Bitboard board) {
 }
 
 
-void pawn_attacks(int color) {
+Bitboard pawn_attacks(int color) {
 
     Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
 
@@ -58,4 +58,33 @@ void pawn_attacks(int color) {
                             & (color ? white_pieces : black_pieces);
 
     Bitboards::print(pawn_attacks);
+}
+
+Bitboard pawn_single_push(int color) {
+
+    Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
+    Bitboard empty = ~(black_pieces | white_pieces);
+  
+    Bitboard pawn_pushes = (color ? pawns >> 8 : pawns << 8) & empty;
+
+    return pawn_pushes;
+}
+
+Bitboard pawn_double_push(int color) {
+
+    Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
+    Bitboard empty = ~(black_pieces | white_pieces);
+
+    Bitboard init_pawn_mask = color ? 0x000000FF00000000 : 0x00000000FF000000;
+    Bitboard pawn_pushes = (color ? pawns >> 16 : pawns << 16) & empty & init_pawn_mask;
+
+    return pawn_pushes;
+}
+
+Bitboard pawn_pushes(int color) {
+
+    Bitboard single_pushes = pawn_single_push(color);
+    Bitboard double_pushes = pawn_double_push(color);
+
+    return single_pushes | (double_pushes & (color ? single_pushes >> 8 : single_pushes << 8));
 }
