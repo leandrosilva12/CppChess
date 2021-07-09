@@ -11,3 +11,4 @@ namespace Bitboards {
 Bitboard pawn_attacks(int);
 Bitboard pawn_pushes(int);
 Bitboard pawn_en_passant(int, Bitboard);
+Bitboard knight_attacks(int);

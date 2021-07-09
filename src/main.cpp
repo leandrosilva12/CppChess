@@ -7,5 +7,6 @@ int main() {
 
     pawn_attacks(0);
     pawn_pushes(0);
+    knight_attacks(0);
     return 0;
 }
