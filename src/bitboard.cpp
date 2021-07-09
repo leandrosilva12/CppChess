@@ -17,10 +17,12 @@ Bitboard pawn_pieces;
 Bitboard black_en_passant; 
 Bitboard white_en_passant;
 
-Bitboard a_col_mask;
-Bitboard h_col_mask;
-Bitboard ab_col_mask;
-Bitboard gh_col_mask;
+Bitboard r4_mask;
+Bitboard r5_mask;
+Bitboard cA_mask;
+Bitboard cH_mask;
+Bitboard cAB_mask;
+Bitboard cGH_mask;
     
 
 void Bitboards::init() {
@@ -37,10 +39,12 @@ void Bitboards::init() {
     black_en_passant = 0x0000000000000000;
     white_en_passant = 0x0000000000000000;
 
-    a_col_mask = 0x7F7F7F7F7F7F7F7F;
-    h_col_mask = 0xFEFEFEFEFEFEFEFE;
-    ab_col_mask = 0x3f3f3f3f3f3f3f3f;
-    gh_col_mask = 0xfcfcfcfcfcfcfcfc;
+    r4_mask =  0x00000000FF000000;
+    r5_mask =  0x000000FF00000000;
+    cA_mask =  0x7F7F7F7F7F7F7F7F;
+    cH_mask =  0xFEFEFEFEFEFEFEFE;
+    cAB_mask = 0x3f3f3f3f3f3f3f3f;
+    cGH_mask = 0xfcfcfcfcfcfcfcfc;
 }
 
 
@@ -54,31 +58,28 @@ void Bitboards::print(Bitboard board) {
         std::cout << std::endl;
     }    
     std::cout << std::endl;
-
 }
 
 Bitboard nort_one (Bitboard b) {return (b << 8);}
 Bitboard sout_one (Bitboard b) {return (b >> 8);}
-Bitboard east_one (Bitboard b) {return (b << 1) & a_col_mask;}
-Bitboard west_one (Bitboard b) {return (b >> 1) & h_col_mask;}
-Bitboard ne_one (Bitboard b) {return (b << 9) & a_col_mask;}
-Bitboard se_one (Bitboard b) {return (b >> 7) & a_col_mask;}
-Bitboard sw_one (Bitboard b) {return (b >> 9) & h_col_mask;}
-Bitboard nw_one (Bitboard b) {return (b << 7) & h_col_mask;}
+Bitboard west_one (Bitboard b) {return (b << 1) & cA_mask;}
+Bitboard east_one (Bitboard b) {return (b >> 1) & cH_mask;}
+Bitboard nw_one (Bitboard b) {return (b << 9) & cA_mask;}
+Bitboard sw_one (Bitboard b) {return (b >> 7) & cA_mask;}
+Bitboard se_one (Bitboard b) {return (b >> 9) & cH_mask;}
+Bitboard ne_one (Bitboard b) {return (b << 7) & cH_mask;}
 
 Bitboard pawn_attacks(int color) {
 
     Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
 
-    Bitboard pawn_east_atk = color ? pawns >> 9 : pawns << 7;
-    Bitboard pawn_west_atk = color ? pawns >> 7 : pawns << 9;
+    Bitboard east_attacks = color ? se_one(pawns) : ne_one(pawns);
+    Bitboard west_attacks = color ? sw_one(pawns) : nw_one(pawns);
 
     // Prevents some impossible moves due to shifting
-    Bitboard pawn_atks = ((pawn_east_atk & a_col_mask) | (pawn_west_atk & h_col_mask));
+    Bitboard attacks = east_attacks | west_attacks;
 
-    
-    Bitboards::print((pawn_atks & (color ? white_pieces : black_pieces)) | pawn_en_passant(color, pawn_atks));
-    return (pawn_atks & (color ? white_pieces : black_pieces)) | pawn_en_passant(color, pawn_atks);
+    return (attacks & (color ? white_pieces : black_pieces)) | pawn_en_passant(color, attacks);
 }
 
 Bitboard pawn_single_push(int color) {
@@ -86,9 +87,7 @@ Bitboard pawn_single_push(int color) {
     Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
     Bitboard empty = ~(black_pieces | white_pieces);
   
-    Bitboard pawn_pushes = (color ? pawns >> 8 : pawns << 8) & empty;
-
-    return pawn_pushes;
+    return (color ? sout_one(pawns) : nort_one(pawns)) & empty;
 }
 
 Bitboard pawn_double_push(int color) {
@@ -96,19 +95,17 @@ Bitboard pawn_double_push(int color) {
     Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
     Bitboard empty = ~(black_pieces | white_pieces);
 
-    Bitboard init_pawn_mask = color ? 0x000000FF00000000 : 0x00000000FF000000;
-    Bitboard pawn_pushes = (color ? pawns >> 16 : pawns << 16) & empty & init_pawn_mask;
+    Bitboard double_push_mask = color ? r5_mask : r4_mask;
 
-    return pawn_pushes;
+    return (color ? pawns >> 16 : pawns << 16) & empty & double_push_mask;
 }
 
 Bitboard pawn_en_passant(int color, Bitboard pawn_attacks) {
 
-    Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
+    // Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
     Bitboard en_passant = color ? black_en_passant : white_en_passant;
 
-    Bitboard en_passant_atks = (color ? en_passant << 8 : en_passant >> 8) & pawn_attacks;
-    return en_passant_atks;
+    return (color ? nort_one(en_passant) : sout_one(en_passant)) & pawn_attacks;
 }
 
 Bitboard pawn_pushes(int color) {
@@ -123,14 +120,13 @@ Bitboard knight_attacks(int color) {
 
     Bitboard knights = knight_pieces & (color ? black_pieces : white_pieces);
 
-    Bitboard l1 = (knights >> 1) & a_col_mask;
-    Bitboard l2 = (knights >> 2) & ab_col_mask;
-    Bitboard r1 = (knights << 1) & h_col_mask;
-    Bitboard r2 = (knights << 2) & gh_col_mask;
+    Bitboard l1 = (knights >> 1) & cA_mask;
+    Bitboard l2 = (knights >> 2) & cAB_mask;
+    Bitboard r1 = (knights << 1) & cH_mask;
+    Bitboard r2 = (knights << 2) & cGH_mask;
     Bitboard h1 = l1 | r1;
     Bitboard h2 = l2 | r2;
 
-    Bitboards::print(((h1<<16) | (h1>>16) | (h2<<8) | (h2>>8)) & ~(color ? black_pieces : white_pieces));
     return ((h1<<16) | (h1>>16) | (h2<<8) | (h2>>8)) & ~(color ? black_pieces : white_pieces);
 }
 
@@ -140,6 +136,5 @@ Bitboard king_attacks(int color) {
     kings |= attacks;
     attacks |= nort_one(kings) | sout_one(kings);
 
-    Bitboards::print(attacks & (color ? white_pieces : black_pieces));
     return attacks & (color ? white_pieces : black_pieces);
 }

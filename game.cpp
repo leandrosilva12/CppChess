@@ -8,7 +8,6 @@
 using namespace sf;
 using namespace std;
 
-
 // prototype functions
 vector<bool> makeMove(int x, int y, int n, int m);
 vector<pair<int, int>> getMovesLegal(int x, int y);
@@ -22,11 +21,9 @@ vector<pair<int, int>> getMoves(int x, int y);
 void promote(int x, int y);
 int evaluate();
 
-
 // final variables
 const int WIN_WIDTH = 600;
 const int WIN_HEIGHT = 600;
-
 
 // classes
 class TextureManager
@@ -82,7 +79,7 @@ public:
         sprite.setScale(
             WIN_WIDTH / 8.0 / sprite.getLocalBounds().width,
             WIN_HEIGHT / 8.0 / sprite.getLocalBounds().height);
-        
+
         add(key, sprite);
     }
 
@@ -114,24 +111,22 @@ public:
     }
 };
 
-
 // global variables
 bool turn = true;
 int board[8][8] = {
-    {-11, -1, 0, 0, 0, 0, 1, 11},   //   pawn = 1/8     isn't/is en passant
-    { -2, -1, 0, 0, 0, 0, 1,  2},   // knight = 2
-    { -3, -1, 0, 0, 0, 0, 1,  3},   // bishop = 3
-    { -5, -1, 0, 0, 0, 0, 1,  5},   //   rook = 4/11    has/hasn't moved
-    {-13, -1, 0, 0, 0, 0, 1, 13},   //  queen = 5
-    { -3, -1, 0, 0, 0, 0, 1,  3},   //   king = 6/13    has/hasn't moved
-    { -2, -1, 0, 0, 0, 0, 1,  2},
+    {-11, -1, 0, 0, 0, 0, 1, 11}, //   pawn = 1/8     isn't/is en passant
+    {-2, -1, 0, 0, 0, 0, 1, 2},   // knight = 2
+    {-3, -1, 0, 0, 0, 0, 1, 3},   // bishop = 3
+    {-5, -1, 0, 0, 0, 0, 1, 5},   //   rook = 4/11    has/hasn't moved
+    {-13, -1, 0, 0, 0, 0, 1, 13}, //  queen = 5
+    {-3, -1, 0, 0, 0, 0, 1, 3},   //   king = 6/13    has/hasn't moved
+    {-2, -1, 0, 0, 0, 0, 1, 2},
     {-11, -1, 0, 0, 0, 0, 1, 11}};
 string piecesNames[6] = {"pawn", "knight", "bishop", "rook", "queen", "king"};
 Sprite boardSprite;
 TextureManager textureManager;
 SpriteManager spriteManager;
 RenderWindow window(VideoMode(WIN_WIDTH, WIN_HEIGHT), "CppChess");
-
 
 // functions
 void promote(int x, int y)
@@ -142,46 +137,50 @@ void promote(int x, int y)
          << "(R) Rook:" << endl
          << "(B) Bishop:" << endl
          << "(K) Knight:" << endl;
-        
+
     char res[1];
     string color = board[x][y] > 0 ? "W" : "B";
 
-    while (1) {
+    while (1)
+    {
         cout << ">>> ";
         scanf("%1s", res);
-        for (char &c : res) c = toupper(c);
+        for (char &c : res)
+            c = toupper(c);
 
         if (res[0] == 'Q')
         {
             board[x][y] *= 5;
-            spriteManager.get({x, y}).setTexture( 
-                textureManager.get("queen" + color) );
+            spriteManager.get({x, y}).setTexture(
+                textureManager.get("queen" + color));
             break;
         }
         else if (res[0] == 'R')
         {
             board[x][y] *= 4;
-            spriteManager.get({x, y}).setTexture( 
-                textureManager.get("rook" + color) );
+            spriteManager.get({x, y}).setTexture(
+                textureManager.get("rook" + color));
             break;
         }
         else if (res[0] == 'B')
         {
             board[x][y] *= 3;
-            spriteManager.get({x, y}).setTexture( 
-                textureManager.get("bishop" + color) );
+            spriteManager.get({x, y}).setTexture(
+                textureManager.get("bishop" + color));
             break;
         }
         else if (res[0] == 'K')
         {
             board[x][y] *= 2;
-            spriteManager.get({x, y}).setTexture( 
-                textureManager.get("knight" + color) );
+            spriteManager.get({x, y}).setTexture(
+                textureManager.get("knight" + color));
             break;
         }
-        else {    
+        else
+        {
             // Clean the input
-            while (getchar() != '\n');
+            while (getchar() != '\n')
+                ;
         }
     }
 }
@@ -308,7 +307,8 @@ map<pair<int, int>, vector<pair<int, int>>> getAllMovesLegal()
         for (int y = 0; y < 8; y++)
         {
             other = board[x][y];
-            if (other == 0) continue;
+            if (other == 0)
+                continue;
 
             if ((other > 0 ? 1 : 0) == turn)
             {
@@ -651,11 +651,13 @@ int evaluate()
 
             if (piece > 0)
             {
-                i = y; j = x;
+                i = y;
+                j = x;
             }
-            else 
+            else
             {
-                i = 7 - y; j = 7 - x;
+                i = 7 - y;
+                j = 7 - x;
             }
 
             switch (abs(piece) % 7)
@@ -758,11 +760,10 @@ void updateBoard(pair<int, int> curPos, pair<int, int> oldPos, pair<int, int> ne
     window.draw(sprite);
 
     // Draw moves
-    for (int i=0; i<movesLegal.size(); i++)
+    for (int i = 0; i < movesLegal.size(); i++)
     {
         pair<int, int> move = movesLegal[i];
-        if (board[move.first][move.second] != 0 
-            || (abs(board[curPos.first][curPos.second]) == 1 && move.first != curPos.first) )
+        if (board[move.first][move.second] != 0 || (abs(board[curPos.first][curPos.second]) == 1 && move.first != curPos.first))
             sprite.setTexture(textureManager.get("capture"));
         else
             sprite.setTexture(textureManager.get("circle"));
@@ -784,7 +785,6 @@ void updateBoard(pair<int, int> curPos, pair<int, int> oldPos, pair<int, int> ne
     }
 }
 
-
 /// start of DEBUG FUNCTIONS
 
 void printBoard()
@@ -803,7 +803,7 @@ void printAllMoves(map<pair<int, int>, vector<pair<int, int>>> turnMoves)
     for (const auto m : turnMoves)
     {
         cout << m.first.first << ',' << m.first.second;
-        const char *name = piecesNames[ abs(board[m.first.first][m.first.second]) % 7 - 1 ].c_str();
+        const char *name = piecesNames[abs(board[m.first.first][m.first.second]) % 7 - 1].c_str();
         printf("%7s : ", name);
         for (pair<int, int> p : m.second)
             cout << '(' << p.first << ',' << p.second << ") ";
@@ -824,12 +824,13 @@ int main()
     boardSprite.setScale(
         (float)WIN_WIDTH / boardSprite.getLocalBounds().width,
         (float)WIN_HEIGHT / boardSprite.getLocalBounds().height);
-    
+
     for (int x = 0; x < 8; x++)
         for (int y = 0; y < 8; y++)
         {
             int piece = board[x][y];
-            if (piece == 0) continue;
+            if (piece == 0)
+                continue;
 
             string name = piecesNames[abs(piece) % 7 - 1];
             string color = (piece > 0) ? "W" : "B";
@@ -848,9 +849,9 @@ int main()
     Cursor cursor;
     Event event;
 
-    printBoard();///
-    printAllMoves(turnMoves);///
-    cout << "eval: " << evaluate() << endl;///
+    printBoard();                           ///
+    printAllMoves(turnMoves);               ///
+    cout << "eval: " << evaluate() << endl; ///
 
     while (window.isOpen())
     {
@@ -872,7 +873,7 @@ int main()
         case Event::MouseButtonReleased:
             if (event.mouseButton.button == Mouse::Left)
             {
-                pos = { (int)(8.0 * event.mouseButton.x / window.getSize().x), (int)(8.0 * event.mouseButton.y / window.getSize().y) };
+                pos = {(int)(8.0 * event.mouseButton.x / window.getSize().x), (int)(8.0 * event.mouseButton.y / window.getSize().y)};
 
                 if (find(turnMoves[curPos].begin(), turnMoves[curPos].end(), pos) != turnMoves[curPos].end())
                 {
@@ -880,7 +881,7 @@ int main()
                     {
                         oldPos = curPos;
                         newPos = pos;
-                        
+
                         vector<bool> v = makeMove(oldPos.first, oldPos.second, newPos.first, newPos.second);
                         bool captured = v[0];
                         bool promoted = v[1];
@@ -893,7 +894,7 @@ int main()
                                 cout << (!turn ? "White" : "Black") << " Wins!" << endl;
                             else if (res == 2)
                                 cout << "Draw!" << res << endl;
-                        }      
+                        }
 
                         spriteManager.add(newPos, spriteManager.get(oldPos));
                         spriteManager.remove(oldPos);
@@ -903,16 +904,16 @@ int main()
                             // Remove pawn captured en passant
                             int piece = board[newPos.first][turn ? newPos.second - 1 : newPos.second + 1];
                             if (piece == 0)
-                                spriteManager.remove( {newPos.first, turn ? newPos.second - 1 : newPos.second + 1} );
+                                spriteManager.remove({newPos.first, turn ? newPos.second - 1 : newPos.second + 1});
                         }
                         if (promoted)
                             promote(newPos.first, newPos.second);
 
                         turnMoves = getAllMovesLegal();
 
-                        printBoard();///
-                        printAllMoves(turnMoves);///
-                        cout << "eval: " << evaluate() << endl;///
+                        printBoard();                           ///
+                        printAllMoves(turnMoves);               ///
+                        cout << "eval: " << evaluate() << endl; ///
 
                         curPos = {-1, -1};
                         clicking = false;
@@ -949,7 +950,7 @@ int main()
             }
             break;
         case Event::MouseMoved:
-            pos = { (int)(8.0 * event.mouseMove.x / window.getSize().x), (int)(8.0 * event.mouseMove.y / window.getSize().y) };
+            pos = {(int)(8.0 * event.mouseMove.x / window.getSize().x), (int)(8.0 * event.mouseMove.y / window.getSize().y)};
 
             if (spriteManager.contains(pos))
             {
@@ -964,10 +965,10 @@ int main()
                         window.setMouseCursor(cursor);
             }
             else
-            {   
+            {
                 if (clicking)
                     clicking = false;
-                if (!dragging)  
+                if (!dragging)
                     if (cursor.loadFromSystem(Cursor::Arrow))
                         window.setMouseCursor(cursor);
             }
@@ -981,7 +982,7 @@ int main()
         default:
             break;
         }
-        
+
         window.display();
         window.setFramerateLimit(250);
     }

@@ -5,9 +5,9 @@
 int main() {
     Bitboards::init();
 
-    pawn_attacks(0);
-    pawn_pushes(0);
-    knight_attacks(0);
-    king_attacks(0);
+    Bitboards::print( pawn_attacks(0) );
+    Bitboards::print( pawn_pushes(0) );
+    Bitboards::print( knight_attacks(0) );
+    Bitboards::print( king_attacks(0) );
     return 0;
 }
