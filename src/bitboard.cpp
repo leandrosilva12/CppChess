@@ -57,6 +57,14 @@ void Bitboards::print(Bitboard board) {
 
 }
 
+Bitboard nort_one (Bitboard b) {return (b << 8);}
+Bitboard sout_one (Bitboard b) {return (b >> 8);}
+Bitboard east_one (Bitboard b) {return (b << 1) & a_col_mask;}
+Bitboard west_one (Bitboard b) {return (b >> 1) & h_col_mask;}
+Bitboard ne_one (Bitboard b) {return (b << 9) & a_col_mask;}
+Bitboard se_one (Bitboard b) {return (b >> 7) & a_col_mask;}
+Bitboard sw_one (Bitboard b) {return (b >> 9) & h_col_mask;}
+Bitboard nw_one (Bitboard b) {return (b << 7) & h_col_mask;}
 
 Bitboard pawn_attacks(int color) {
 
@@ -126,4 +134,12 @@ Bitboard knight_attacks(int color) {
     return ((h1<<16) | (h1>>16) | (h2<<8) | (h2>>8)) & ~(color ? black_pieces : white_pieces);
 }
 
+Bitboard king_attacks(int color) {
+    Bitboard kings = king_pieces & (color ? black_pieces : white_pieces);
+    Bitboard attacks = east_one(kings) | west_one(kings);
+    kings |= attacks;
+    attacks |= nort_one(kings) | sout_one(kings);
 
+    Bitboards::print(attacks & (color ? white_pieces : black_pieces));
+    return attacks & (color ? white_pieces : black_pieces);
+}
