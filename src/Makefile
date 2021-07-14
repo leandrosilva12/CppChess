@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = -Wall
-LDFLAGS =
+LDFLAGS = -lm
 OBJFILES = $(wildcard *.cpp)
 TARGET = main
 
