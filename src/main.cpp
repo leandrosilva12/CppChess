@@ -1,11 +1,10 @@
 
 #include <iostream>
 #include "bitboard.h"
-#include "magic_numbers.h"
 
 int main() {
     // MagicNumbers::main();
-    /*
+    /* magic test q n funciona ou é demasiado fdd p eu entender
     Bitboards::print( 0x007E010101010100 );
     Bitboards::print( 0x48FFFE99FECFAA00 );	
     Bitboards::print( 0x01FE010101010101 );
@@ -17,6 +16,9 @@ int main() {
     */
 
     Bitboards::init();
+
+    Bitboards::print( pieces[white] );
+    Bitboards::print( pieces[white] & pieces[knight] );
 
     Bitboard block = 0ULL;
     block = set_bit(a6, block);
@@ -32,5 +34,6 @@ int main() {
     Bitboards::print( king_attacks(0) );
     Bitboards::print( rook_attacks(a1, block) );
     Bitboards::print( bishop_attacks(a1, block) );
+    Bitboards::print( queen_attacks(d4, block) );
     return 0;
 }

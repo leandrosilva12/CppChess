@@ -1,18 +1,19 @@
 
 #include <bitset>
 #include <iostream>
+#include <algorithm>
 #include "bitboard.h"
 
 using namespace Bitboards;
 
-Bitboard black_pieces;
 Bitboard white_pieces;
-Bitboard king_pieces;
-Bitboard queen_pieces;
-Bitboard rook_pieces;
-Bitboard bishop_pieces;
-Bitboard knight_pieces;
+Bitboard black_pieces;
 Bitboard pawn_pieces;
+Bitboard knight_pieces;
+Bitboard bishop_pieces;
+Bitboard rook_pieces;
+Bitboard queen_pieces;
+Bitboard king_pieces;
 
 Bitboard black_en_passant; 
 Bitboard white_en_passant;
@@ -23,18 +24,30 @@ Bitboard cA_mask;
 Bitboard cH_mask;
 Bitboard cAB_mask;
 Bitboard cGH_mask;
+
+Bitboard pieces[8];
+// pieces[8] = {
+//   white_pieces,
+//   black_pieces,
+//   pawn_pieces,
+//   knight_pieces,
+//   bishop_pieces,
+//   rook_pieces,
+//   queen_pieces,
+//   king_pieces,
+// };
     
 
 void Bitboards::init() {
 
-    black_pieces =  0xFFFF000000000000;
-    white_pieces =  0x000000000000FFFF;
-    king_pieces =   0x1000000000000010;
-    queen_pieces =  0x0800000000000008;
-    rook_pieces =   0x8100000000000081;
-    bishop_pieces = 0x2400000000000024;
-    knight_pieces = 0x4200000000000042;
-    pawn_pieces =   0x00FF00000000FF00;
+    black_pieces = pieces[black] =  0xFFFF000000000000;
+    white_pieces = pieces[white] =  0x000000000000FFFF;
+    king_pieces = pieces[king] =   0x1000000000000010;
+    queen_pieces = pieces[queen] =  0x0800000000000008;
+    rook_pieces = pieces[rook] =   0x8100000000000081;
+    bishop_pieces = pieces[bishop] = 0x2400000000000024;
+    knight_pieces = pieces[knight] = 0x4200000000000042;
+    pawn_pieces = pieces[pawn] =   0x00FF00000000FF00;
 
     black_en_passant = 0x0000000000000000;
     white_en_passant = 0x0000000000000000;
@@ -174,20 +187,25 @@ Bitboard bishop_attacks(int square, Bitboard block) {
   int row = square/8, col = square%8, r, c;
 
   for(r = row+1, c = col+1; r <= 7 && c <= 7; r++, c++) {
-    attacks |= (1 << (c + r*8));
-    if(block & (1 << (c + r*8))) break;
+    attacks = set_bit(c + r*8, attacks);
+    if(test_bit(c + r*8, block)) break;
   }
   for(r = row+1, c = col-1; r <= 7 && c >= 0; r++, c--) {
-    attacks |= (1 << (c + r*8));
-    if(block & (1 << (c + r*8))) break;
+    attacks = set_bit(c + r*8, attacks);
+    if(test_bit(c + r*8, block)) break;
   }
   for(r = row-1, c = col+1; r >= 0 && c <= 7; r--, c++) {
-    attacks |= (1 << (c + r*8));
-    if(block & (1 << (c + r*8))) break;
+    attacks = set_bit(c + r*8, attacks);
+    if(test_bit(c + r*8, block)) break;
   }
   for(r = row-1, c = col-1; r >= 0 && c >= 0; r--, c--) {
-    attacks |= (1 << (c + r*8));
-    if(block & (1 << (c + r*8))) break;
+    attacks = set_bit(c + r*8, attacks);
+    if(test_bit(c + r*8, block)) break;
   }
   return attacks;
+}
+
+
+Bitboard queen_attacks(int square, Bitboard block) {
+  return rook_attacks(square, block) | bishop_attacks(square, block);
 }

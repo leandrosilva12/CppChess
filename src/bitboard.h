@@ -13,6 +13,13 @@ enum {
     a8, b8, c8, d8, e8, f8, g8, h8,
 };
 
+enum {
+    white, black,
+    pawn, knight, bishop, rook, queen, king
+};
+
+extern Bitboard pieces[8];
+
 namespace Bitboards {
 
     void init();
@@ -31,3 +38,4 @@ Bitboard knight_attacks(int);
 Bitboard king_attacks(int);
 Bitboard rook_attacks(int, Bitboard);
 Bitboard bishop_attacks(int, Bitboard);
+Bitboard queen_attacks(int, Bitboard);
