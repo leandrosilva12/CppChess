@@ -2,7 +2,7 @@
 #include <bitset>
 #include <iostream>
 #include <algorithm>
-#include "bitboard.h"
+#include "bitboard.hpp"
 
 using namespace Bitboards;
 

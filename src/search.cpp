@@ -1,7 +1,7 @@
 
 
-#include "search.h"
-#include "bitboard.h"
+#include "search.hpp"
+#include "bitboard.hpp"
 #include <math.h>       /* log2 */
 
 Bitboard legal_moves(int color, Bitboard pieces[]) {

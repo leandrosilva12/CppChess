@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include "bitboard.h"
+#include "bitboard.hpp"
 
 int main() {
     // MagicNumbers::main();
