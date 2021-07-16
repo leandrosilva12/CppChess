@@ -13,7 +13,7 @@ enum {
     a8, b8, c8, d8, e8, f8, g8, h8,
 };
 
-enum {
+enum piece {
     white, black,
     pawn, knight, bishop, rook, queen, king
 };
@@ -24,26 +24,31 @@ namespace Bitboards {
 
     void init();
     void print(Bitboard);
+    void init_all();
 }
 
-bool test_bit(int square, Bitboard b);
-Bitboard set_bit(int square, Bitboard b);
-void toggle_bit_ref(int square, Bitboard *b);
-Bitboard toggle_bit(int square, Bitboard b);
-Bitboard reset_bit(int square, Bitboard b);
+bool test_bit(int, Bitboard);
+Bitboard set_bit(int, Bitboard);
+Bitboard toggle_bit(int, Bitboard);
+Bitboard reset_bit(int, Bitboard);
 
-Bitboard pawn_attacks(int);
 Bitboard pawn_pushes(int);
 Bitboard pawn_en_passant(int, Bitboard);
+
+Bitboard pawn_attacks(int, int);
 Bitboard knight_attacks(int);
 Bitboard king_attacks(int);
-
-Bitboard rook_attacks(int, Bitboard);
 Bitboard bishop_attacks(int, Bitboard);
+Bitboard rook_attacks(int, Bitboard);
 Bitboard queen_attacks(int, Bitboard);
 
 Bitboard bishop_attacks_on_the_fly(int, Bitboard);
 Bitboard rook_attacks_on_the_fly(int, Bitboard);
 
-Bitboard rook_mask(int);
 Bitboard bishop_mask(int);
+Bitboard rook_mask(int);
+
+Bitboard get_random_bitboard();
+Bitboard generate_magic_number();
+int count_bits();
+int pop_ls1b(Bitboard*);

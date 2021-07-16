@@ -5,6 +5,7 @@
 #include <math.h>       /* log2 */
 
 Bitboard legal_moves(int color, Bitboard pieces[]) {
+    /*
     Bitboard king_piece = pieces[king] & pieces[color];
     int king_square = log2(king_piece);
     Bitboard block = pieces[~color];
@@ -20,5 +21,6 @@ Bitboard legal_moves(int color, Bitboard pieces[]) {
         | (bishop_attacks (king_square, block)  & opBQ)
         | (rook_attacks   (king_square, block)  & opRQ)
         ;
+    */
     return 0;
 }

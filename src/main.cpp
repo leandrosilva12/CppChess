@@ -1,39 +1,62 @@
 
 #include <iostream>
+
 #include "bitboard.hpp"
+#include "magic_numbers.hpp"
 
 int main() {
-    // MagicNumbers::main();
-    /* magic test q n funciona ou é demasiado fdd p eu entender
-    Bitboards::print( 0x007E010101010100 );
-    Bitboards::print( 0x48FFFE99FECFAA00 );	
-    Bitboards::print( 0x01FE010101010101 );
+  // MagicNumbers::init();
 
-    Bitboards::print( 0x01FE010101010101 * 0x48FFFE99FECFAA00 );
-    Bitboards::print( 0x01FE010101010101 * 0x48FFFE99FECFAA00 >> (64 - 10) );
+  Bitboards::init();
+  Bitboards::init_all();
 
-    Bitboards::print( transform(0x007E010101010100, 0x48FFFE99FECFAA00, 10) );
-    */
+  // define test bitboard
+  Bitboard occupancy = 0ULL;
 
-    Bitboards::init();
+  // set blocker pieces on board
+  occupancy = set_bit(c5, occupancy);
+  occupancy = set_bit(f2, occupancy);
+  occupancy = set_bit(g7, occupancy);
+  occupancy = set_bit(b2, occupancy);
+  occupancy = set_bit(g5, occupancy);
+  occupancy = set_bit(e2, occupancy);
+  occupancy = set_bit(e7, occupancy);
+  occupancy = set_bit(e4, occupancy);
+  occupancy = set_bit(e3, occupancy);
 
-    Bitboards::print( pieces[white] );
-    Bitboards::print( pieces[white] & pieces[knight] );
+  // print occupancies
+  Bitboards::print(occupancy);
 
-    Bitboard block = 0ULL;
-    block = set_bit(a6, block);
-    block = set_bit(c3, block);
-    block = set_bit(d4, block);
-    block = set_bit(e5, block);
+  // print rook attacks
+  Bitboards::print(rook_attacks(e5, occupancy));
 
-    Bitboards::print( block );
-    
-    Bitboards::print( pawn_attacks(0) );
-    Bitboards::print( pawn_pushes(0) );
-    Bitboards::print( knight_attacks(0) );
-    Bitboards::print( king_attacks(0) );
-    Bitboards::print( rook_attacks(a1, block) );
-    Bitboards::print( bishop_attacks(a1, block) );
-    Bitboards::print( queen_attacks(d4, block) );
-    return 0;
+  // print bishop attacks
+  Bitboards::print(bishop_attacks(d4, occupancy));
+
+  return 0;
+
+  Bitboard block = 0ULL;
+  block = set_bit(a6, block);
+  block = set_bit(c3, block);
+  block = set_bit(d4, block);
+  block = set_bit(e5, block);
+
+  Bitboards::print(block);
+  std::cout << pop_ls1b(&block) << std::endl;
+  Bitboards::print(block);
+
+  Bitboards::print(get_random_bitboard());
+  Bitboards::print(generate_magic_number());
+
+  Bitboards::print(pawn_attacks(white, 0));
+  Bitboards::print(pawn_pushes(0));
+  Bitboards::print(knight_attacks(0));
+  Bitboards::print(king_attacks(0));
+  Bitboards::print(rook_attacks_on_the_fly(a1, block));
+  Bitboards::print(bishop_attacks_on_the_fly(a1, block));
+  Bitboards::print(rook_attacks_on_the_fly(d4, block));
+  Bitboards::print(rook_mask(a1));
+  Bitboards::print(bishop_mask(a1));
+  Bitboards::print(rook_mask(d4));
+  return 0;
 }
