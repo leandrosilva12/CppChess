@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include "bitboard.hpp"
-#include "magic_numbers.hpp"
 
 int main() {
   // MagicNumbers::init();
