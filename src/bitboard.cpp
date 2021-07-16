@@ -22,13 +22,6 @@ Bitboard king_pieces;
 Bitboard black_en_passant;
 Bitboard white_en_passant;
 
-Bitboard r4_mask;
-Bitboard r5_mask;
-Bitboard cA_mask;
-Bitboard cH_mask;
-Bitboard cAB_mask;
-Bitboard cGH_mask;
-
 Bitboard pieces[8];
 
 Bitboard rook_magic_numbers[64];
@@ -44,6 +37,12 @@ Bitboard rook_masks_table[64];
 Bitboard bishop_attacks_table[64][512];  // [square][occupancies]
 Bitboard rook_attacks_table[64][4096];   // [square][occupancies]
 
+const Bitboard r4_mask =  0x00000000FF000000;
+const Bitboard r5_mask =  0x000000FF00000000;
+const Bitboard cA_mask =  0xFEFEFEFEFEFEFEFE;
+const Bitboard cH_mask =  0x7F7F7F7F7F7F7F7F;
+const Bitboard cAB_mask = 0xfcfcfcfcfcfcfcfc;
+const Bitboard cGH_mask = 0x3f3f3f3f3f3f3f3f;
 
 // results for hash of pop LS1B
 const int bits_table[64] = {
@@ -75,26 +74,6 @@ const int rook_relevant_bits[64] = {
   11, 10, 10, 10, 10, 10, 10, 11,
   12, 11, 11, 11, 11, 11, 11, 12};
 
-void Bitboards::init() {
-  black_pieces = pieces[black] = 0xFFFF000000000000;
-  white_pieces = pieces[white] = 0x000000000000FFFF;
-  king_pieces = pieces[king] = 0x1000000000000010;
-  queen_pieces = pieces[queen] = 0x0800000000000008;
-  rook_pieces = pieces[rook] = 0x8100000000000081;
-  bishop_pieces = pieces[bishop] = 0x2400000000000024;
-  knight_pieces = pieces[knight] = 0x4200000000000042;
-  pawn_pieces = pieces[pawn] = 0x00FF00000000FF00;
-
-  black_en_passant = 0x0000000000000000;
-  white_en_passant = 0x0000000000000000;
-
-  r4_mask = 0x00000000FF000000;
-  r5_mask = 0x000000FF00000000;
-  cA_mask = 0xFEFEFEFEFEFEFEFE;
-  cH_mask = 0x7F7F7F7F7F7F7F7F;
-  cAB_mask = 0xfcfcfcfcfcfcfcfc;
-  cGH_mask = 0x3f3f3f3f3f3f3f3f;
-}
 
 void Bitboards::print(Bitboard board) {
   std::bitset<64> bitboard = board;
@@ -191,7 +170,7 @@ Bitboard all_king_attacks(int color) {
 }
 
 Bitboard pawn_attacks(int color, int square) {
-  Bitboard pawn = set_bit(0ULL, square);
+  Bitboard pawn = set_bit(square, 0ULL);
 
   Bitboard east_attacks = color ? se_one(pawn) : ne_one(pawn);
   Bitboard west_attacks = color ? sw_one(pawn) : nw_one(pawn);
@@ -200,7 +179,7 @@ Bitboard pawn_attacks(int color, int square) {
 }
 
 Bitboard knight_attacks(int square) {
-  Bitboard knight = set_bit(0ULL, square);
+  Bitboard knight = set_bit(square, 0ULL);
 
   Bitboard l1 = (knight >> 1) & cH_mask;
   Bitboard l2 = (knight >> 2) & cGH_mask;
@@ -213,7 +192,7 @@ Bitboard knight_attacks(int square) {
 }
 
 Bitboard king_attacks(int square) {
-  Bitboard king = set_bit(0ULL, square);
+  Bitboard king = set_bit(square, 0ULL);
   Bitboard attacks = east_one(king) | west_one(king);
   king |= attacks;
   attacks |= nort_one(king) | sout_one(king);
@@ -500,7 +479,19 @@ void init_sliders_attacks(int bishop) {
   }
 }
 
-void Bitboards::init_all() {
+void Bitboards::init() {
+  black_pieces = pieces[black] = 0xFFFF000000000000;
+  white_pieces = pieces[white] = 0x000000000000FFFF;
+  king_pieces = pieces[king] = 0x1000000000000010;
+  queen_pieces = pieces[queen] = 0x0800000000000008;
+  rook_pieces = pieces[rook] = 0x8100000000000081;
+  bishop_pieces = pieces[bishop] = 0x2400000000000024;
+  knight_pieces = pieces[knight] = 0x4200000000000042;
+  pawn_pieces = pieces[pawn] = 0x00FF00000000FF00;
+
+  black_en_passant = 0x0000000000000000;
+  white_en_passant = 0x0000000000000000;
+
   // init magic numbers
   init_magic_numbers();
 
