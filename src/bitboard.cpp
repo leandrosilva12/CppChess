@@ -89,7 +89,7 @@ Bitboard sw_one(Bitboard b) {return (b >> 7) & cA_mask;}
 Bitboard se_one(Bitboard b) {return (b >> 9) & cH_mask;}
 Bitboard ne_one(Bitboard b) {return (b << 7) & cH_mask;}
 
-Bitboard pawn_attacks(int color) {
+Bitboard all_pawn_attacks(int color) {
 
     Bitboard pawns = pawn_pieces & (color ? black_pieces : white_pieces);
 
@@ -100,6 +100,15 @@ Bitboard pawn_attacks(int color) {
     Bitboard attacks = east_attacks | west_attacks;
 
     return (attacks & (color ? white_pieces : black_pieces)) | pawn_en_passant(color, attacks);
+}
+
+Bitboard pawn_attacks(int color, int square) {
+    Bitboard pawn = set_bit(0ULL, square);
+
+    Bitboard east_attacks = color ? se_one(pawn) : ne_one(pawn);
+    Bitboard west_attacks = color ? sw_one(pawn) : nw_one(pawn);
+
+    return east_attacks | west_attacks;
 }
 
 Bitboard pawn_single_push(int color) {
