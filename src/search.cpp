@@ -53,7 +53,7 @@ Bitboard legal_moves(int color, Bitboard pieces[]) {
 
             if (type == pawn) {
 
-            }eely a blocker or make a direct check.
+            }//eely a blocker or make a direct check.
         }
         square++;
         occupied <<= 1;
