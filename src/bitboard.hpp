@@ -1,6 +1,9 @@
 
 #include "types.hpp"
 
+#ifndef BITBOARD_H_INCLUDED
+#define BITBOARD_H_INCLUDED
+
 
 extern Bitboard pieces[8];
 
@@ -36,3 +39,5 @@ Bitboard get_random_bitboard();
 Bitboard generate_magic_number();
 int count_bits();
 int pop_ls1b(Bitboard*);
+
+#endif
